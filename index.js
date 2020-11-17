@@ -55,9 +55,11 @@ app.get('/streams', async (req, res) => {
     }
 })
 
-app.post('/recommendations/', async (req, res) => {
+app.post('/recommendations', async (req, res) => {
     try {
         let { userId, title, stream } = req.body
+
+        title = title?.trim()
 
         if (!await db.findUserById(userId)) {
             res.status(401).json()
@@ -68,7 +70,7 @@ app.post('/recommendations/', async (req, res) => {
             return
         }
 
-        if (await db.titleExists(title)) {
+        if (await db.titleExists(userId, title)) {
             res.status(400).json({ message: 'Esse filme já foi recomendado' })
             return
         }

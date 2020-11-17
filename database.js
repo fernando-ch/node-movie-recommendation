@@ -1,4 +1,5 @@
 const { MongoClient } = require("mongodb")
+const ObjectID = require('mongodb').ObjectID
 const uri = 'mongodb://localhost:27017'
 
 let db
@@ -17,7 +18,7 @@ MongoClient.connect(uri, {useUnifiedTopology: true})
 
 module.exports = {
     findUserById(id) {
-        return db.collection('users').findOne({ _id: id })
+        return db.collection('users').findOne({ _id: new ObjectID(id) })
     },
 
     findUserByName(name) {
@@ -37,14 +38,26 @@ module.exports = {
         return db.collection('streams').findOne({ name: stream }, { _id: 1 })
     },
 
-    async titleExists(title) {
-        let result = db.collection('rounds').findOne({ 'movies.title': `/^${title}$/i` }, { _id: 1 })
+    async titleExists(userId, title) {
+        let result = await db.collection('rounds').findOne(
+            {
+                movies: {
+                    $elemMatch: {
+                        userId: {$ne: new ObjectID(userId)},
+                        title: new RegExp(`^${title}$`, 'i')
+                    }
+                }
+            },
+            { _id: 1 }
+        )
+
         return Boolean(result)
     },
 
     async makeRecommendation(userId, title, stream) {
+        userId = new ObjectID(userId)
         let round = await this.findCurrentRound()
-        let userMovie = round.movies.find(movie => movie.userId === userId)
+        let userMovie = round.movies?.find(movie => movie.userId.toString() === userId.toString())
 
         if (userMovie) {
             await db.collection('rounds').updateOne(
