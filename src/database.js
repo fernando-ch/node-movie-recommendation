@@ -4,19 +4,19 @@ const uri = 'mongodb://localhost:27017'
 
 let db
 
-console.log('Starting database connection')
-
-MongoClient.connect(uri, {useUnifiedTopology: true})
-    .then(mongoClient => {
-        console.log('Successfully connected to the database')
-        db = mongoClient.db('movieRecommendation')
-    })
-    .catch(error => {
-        console.error('Error while training to connect to the database', error)
-        process.exit(1)
-    })
-
 module.exports = {
+    async connect() {
+        try {
+            console.log('Starting database connection')
+            let mongoClient = await MongoClient.connect(uri, {useUnifiedTopology: true})
+            console.log('Successfully connected to the database')
+            db = mongoClient.db('movieRecommendation')
+        } catch(error) {
+            console.error('Error while training to connect to the database', error)
+            throw error
+        }
+    },
+
     findUserById(id) {
         return db.collection('users').findOne({ _id: new ObjectID(id) })
     },
