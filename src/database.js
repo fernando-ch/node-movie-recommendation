@@ -68,6 +68,8 @@ module.exports = {
                     }
                 }
             )
+
+            return
         }
 
         await db.collection('rounds').updateOne(
