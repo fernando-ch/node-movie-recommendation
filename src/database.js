@@ -17,6 +17,10 @@ module.exports = {
         }
     },
 
+    countUsers() {
+        return db.collection('users').find().count()
+    },
+
     findUserById(id) {
         return db.collection('users').findOne({ _id: new ObjectID(id) })
     },
@@ -80,5 +84,18 @@ module.exports = {
                 }
             }
         )
-    }
+    },
+
+    changeRoundStatus(round, newStatus) {
+        return db.collection('rounds').update(
+            { _id: round._id },
+            {
+                $set: {
+                    status: newStatus
+                }
+            }
+        )
+    },
+
+    
 }
