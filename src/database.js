@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb")
 const ObjectID = require('mongodb').ObjectID
-const uri = 'mongodb://localhost:27017'
+const uri = process.env.MONGO_URI || 'mongodb://localhost:27017'
 
 let db
 
@@ -11,7 +11,7 @@ function getRandomInt(max) {
 module.exports = {
     async connect() {
         try {
-            console.log('Starting database connection')
+            console.log(`Starting database connection on uri ${uri}`)
             let mongoClient = await MongoClient.connect(uri, {useUnifiedTopology: true})
             console.log('Successfully connected to the database')
             db = mongoClient.db('movieRecommendation')
