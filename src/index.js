@@ -15,12 +15,20 @@ wsServer.on('connection', async ws => {
     ws.send(JSON.stringify(currentRound))
 })
 
+async function sendUpdateToClients() {
+    let currentRound = await db.findCurrentRound()
+    wsServer.clients.forEach(function each(client) {
+        client.send(JSON.stringify(currentRound))
+    })
+}
+
+
 app.get('/users/:userName', async (req, res) => {
     try {
         let user = await db.findUserByName(req.params.userName)
 
         if (!user) {
-            let message = `User with name ${req.params.userName} cannot be found`
+            let message = `Usuário com o nome ${req.params.userName} não foi encontrado`
             console.log(message)
             res.status(404).json({message})
             return
@@ -38,7 +46,7 @@ app.get('/rounds/current', async (req, res) => {
         let round = await db.findCurrentRound()
 
         if (!round) {
-            let message = `Current round cannot be found`
+            let message = 'Não foi possível encontrar a rodada atual'
             console.log(message)
             res.status(404).json({message})
             return
@@ -93,9 +101,7 @@ app.post('/recommendations', async (req, res) => {
 
         res.json({message: 'Recomendação realizada com sucesso'})
 
-        wsServer.clients.forEach(function each(client) {
-            client.send(JSON.stringify(currentRound));
-        })
+        await sendUpdateToClients()
     } catch (e) {
         console.error('Error while trying to save a recommendation.', e)
         res.status(500).json()
@@ -119,12 +125,20 @@ app.post('/voting', async (req, res) => {
 
     await db.votingOnMovie(title, userId, watched)
 
+    let currentRound = await db.findCurrentRound()
+    let totalUsers = currentRound.movies.length
+    let votingHasEnded = currentRound.movies.every(movie => {
+        let totalUsersNotWatchedMovie = movie.watchInformationList?.filter(watchInformation => watchInformation.watchedBeforeRound === false)?.length || 0
+        return totalUsersNotWatchedMovie >= Math.round(totalUsers / 2)
+    })
+
+    if (votingHasEnded) {
+        await db.changeRoundStatus(currentRound, "Watching")
+    }
+
     res.json({message: 'Recomendação realizada com sucesso'})
 
-    let currentRound = await db.findCurrentRound()
-    wsServer.clients.forEach(function each(client) {
-        client.send(JSON.stringify(currentRound));
-    })
+    await sendUpdateToClients()
 })
 
 db.connect()

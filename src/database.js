@@ -4,6 +4,10 @@ const uri = 'mongodb://localhost:27017'
 
 let db
 
+function getRandomInt(max) {
+    return Math.floor(Math.random() * Math.floor(max))
+}
+
 module.exports = {
     async connect() {
         try {
@@ -80,14 +84,14 @@ module.exports = {
             { _id: round._id },
             {
                 $addToSet: {
-                    movies: { title, stream, userId }
+                    movies: { title, stream, userId, order: getRandomInt(1000) }
                 }
             }
         )
     },
 
     changeRoundStatus(round, newStatus) {
-        return db.collection('rounds').update(
+        return db.collection('rounds').updateOne(
             { _id: round._id },
             {
                 $set: {
@@ -103,7 +107,7 @@ module.exports = {
 
         let hasWatchInformation = round.movies
             .find(movie => movie.title === title)
-            .watchInformationList?.find(watchInformation => watchInformation.userId === userId)
+            .watchInformationList?.find(watchInformation => watchInformation.userId.toString() === userId.toString())
 
         if (hasWatchInformation) {
             db.collection('rounds').updateOne(
