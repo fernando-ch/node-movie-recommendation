@@ -1,0 +1,7 @@
+body{background-color:#17141d;color:white}
+.card.svelte-s9mgri{position:relative;margin:10px;display:flex;flex-direction:column;height:100px;width:220px;padding:1.5em;border-radius:16px;background:#4e326a;box-shadow:0 0.1rem 3rem #000}.title.svelte-s9mgri{display:block;font-weight:bold}.stream.svelte-s9mgri{font-size:0.7em}.choices.svelte-s9mgri{margin-top:18px}.vote-counter.svelte-s9mgri{position:absolute;right:20px;top:23px}
+#voting-card-list.svelte-cbc2x7{display:flex;flex-direction:column;align-items:center}
+.card.svelte-15jz1k{position:relative;margin:10px;display:flex;flex-direction:column;height:50px;width:220px;padding:1.5em;border-radius:16px;background:#4e326a;box-shadow:0 0.1rem 3rem #000}.title.svelte-15jz1k{display:block;font-weight:bold}
+#voting-card-list.svelte-cbc2x7{display:flex;flex-direction:column;align-items:center}
+
+/*# sourceMappingURL=bundle.css.map */
