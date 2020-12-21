@@ -10,7 +10,7 @@ const wsServer = new WebSocket.Server({ noServer: true })
 app.use(express.json())
 app.use(cors())
 
-app.use(express.static('front-end/svelte-movie-recommendation/public'))
+app.use(express.static('public'))
 
 wsServer.on('connection', async ws => {
     let currentRound = await db.findCurrentRound()
