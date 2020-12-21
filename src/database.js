@@ -97,5 +97,41 @@ module.exports = {
         )
     },
 
-    
+    async votingOnMovie(title, userId, watched) {
+        userId = new ObjectID(userId)
+        let round = await this.findCurrentRound()
+
+        let hasWatchInformation = round.movies
+            .find(movie => movie.title === title)
+            .watchInformationList?.find(watchInformation => watchInformation.userId === userId)
+
+        if (hasWatchInformation) {
+            db.collection('rounds').updateOne(
+                { _id: round._id },
+                {
+                    $set: { 'movies.$[movie].watchInformationList.$[watchInformation].watchedBeforeRound': watched }
+                },
+                {
+                    arrayFilters: [
+                        { 'movie.title': title },
+                        { 'watchInformation.userId': userId }
+                    ]
+                }
+            )
+
+            return
+        }
+
+        db.collection('rounds').updateOne(
+            { _id: round._id, 'movies.title': title },
+            {
+                $addToSet: {
+                    'movies.$.watchInformationList': {
+                        userId: userId,
+                        watchedBeforeRound: watched
+                    }
+                }
+            }
+        )
+    }
 }

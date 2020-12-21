@@ -2,24 +2,17 @@ const express = require('express')
 const cors = require('cors')
 const WebSocket = require('ws')
 const db = require('./database')
-const EventEmitter = require('events');
-const eventEmitter = new EventEmitter()
 
 const app = express()
 const port = 3000
-const wsServer = new WebSocket.Server({ noServer: true });
+const wsServer = new WebSocket.Server({ noServer: true })
 
 app.use(express.json())
 app.use(cors())
 
 wsServer.on('connection', async ws => {
-    async function sendCurrentRound() {
-        let currentRound = await db.findCurrentRound()
-        ws.send(JSON.stringify(currentRound))
-    }
-
-    await sendCurrentRound()
-    eventEmitter.on('roundChanged', sendCurrentRound)
+    let currentRound = await db.findCurrentRound()
+    ws.send(JSON.stringify(currentRound))
 })
 
 app.get('/users/:userName', async (req, res) => {
@@ -91,7 +84,7 @@ app.post('/recommendations', async (req, res) => {
 
         await db.makeRecommendation(userId, title, stream)
 
-        let currentRound = await db.getCurrentRound()
+        let currentRound = await db.findCurrentRound()
         let totalUsers = await db.countUsers()
 
         if (currentRound.movies.length === totalUsers) {
@@ -100,16 +93,43 @@ app.post('/recommendations', async (req, res) => {
 
         res.json({message: 'Recomendação realizada com sucesso'})
 
-        eventEmitter.emit('roundChanged')
+        wsServer.clients.forEach(function each(client) {
+            client.send(JSON.stringify(currentRound));
+        })
     } catch (e) {
         console.error('Error while trying to save a recommendation.', e)
         res.status(500).json()
     }
 })
 
+app.post('/voting', async (req, res) => {
+    let { userId, title, watched } = req.body
+
+    if (!await db.findUserById(userId)) {
+        res.status(401).json()
+        return
+    }
+
+    title = title?.trim()
+
+    if (!(await db.titleExists(userId, title))) {
+        res.status(400).json({message: 'Esse filme foi alterado'})
+        return
+    }
+
+    await db.votingOnMovie(title, userId, watched)
+
+    res.json({message: 'Recomendação realizada com sucesso'})
+
+    let currentRound = await db.findCurrentRound()
+    wsServer.clients.forEach(function each(client) {
+        client.send(JSON.stringify(currentRound));
+    })
+})
+
 db.connect()
     .then(() => {
-        const server = app.listen(port, () => console.log(`App running and listening at port ${port}`));
+        const server = app.listen(port, () => console.log(`App running and listening at port ${port}`))
 
         server.on('upgrade', (request, socket, head) => {
             wsServer.handleUpgrade(request, socket, head, socket => {
@@ -118,4 +138,3 @@ db.connect()
         })
     })
     .catch(() => process.exit(1))
-
